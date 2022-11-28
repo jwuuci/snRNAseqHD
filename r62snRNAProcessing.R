@@ -5,9 +5,9 @@ library(Seurat)
 library(gplots)
 library(ggplot2)
 library(gridExtra)
-setwd("/share/crsp/lab/lmthomps/jiew5/scNuc_071019/seurat3/")#jiew5/lmthomps/scNuc_071019/seurat3
+setwd("/dfs4/som/seurat3/")
 r62str.counts <- Read10X(data.dir = "aggr_all12/outs/filtered_feature_bc_matrix/")
-#meta data
+#meta data for samples
 meta=read.csv(file="metadata.csv",header=F)
 names(meta)=c("ID","name","geno","age","batch")
 r62str <- CreateSeuratObject(counts = r62str.counts)
@@ -20,8 +20,9 @@ r62str$batch <- y$batch
 r62str$geno <- y$geno
 r62str$age <- y$age
 list=SplitObject(r62str,split.by="age")
-r62str=list[[1]]#12 wks
-########Individual sample processing
+#subset to 12wk samples
+r62str=list[[1]]
+########Individual sample processing using standard Seurat
 r62str <- subset(r62str, subset = nFeature_RNA > 200 & nFeature_RNA < 6000 & percent.mt < 2)
 r62str <- NormalizeData(object = r62str)
 r62str <- FindVariableFeatures(r62str, selection.method = "vst", nfeatures = 2000)
@@ -50,7 +51,7 @@ for (i in 0:12) {
   write.csv(as.data.frame(x),file=fn)
 }
 ###############
-#recluster 2, 7 in 12wks
+#recluster #2, 7 in 12wks for oligo and OPC
 r62str1=subset(r62str,idents=c(2,7))
 r62str1 <- NormalizeData(object = r62str1)
 r62str1 <- FindVariableFeatures(r62str1, selection.method = "vst", nfeatures = 1500)
@@ -68,6 +69,7 @@ DimPlot(object = r62str1, reduction = "tsne")
 r62str1 <- RunUMAP(r62str1, dims = 1:11)
 DimPlot(r62str1, reduction = "umap")
 saved=as.factor(r62str1$saved.idents)
+###label clusters
 a="Excitatory neurons 1
 D2+ MSN
 Oligodendrocytes
